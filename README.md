@@ -9,6 +9,10 @@ Make sure you have Twilio installed by running the command:
 ```
 pip install twilio
 ```
+Install google gemini api if you want gemini AI summarizer:
+```
+pip install google.generativeai
+```
 
 #### Getting Your Twilio Phone Number
 You can get your Twilio phone number by following these steps or by watching this [YouTube Video](https://www.youtube.com/watch?v=Sqsz2T1Bzlg&t=29s).
@@ -55,6 +59,7 @@ graph LR
 ├── Components              # Components of the pager
 │   ├── call_component.py   # Number Calling Functionality
 │   ├── gui_component.py    # Python Gui Maker
+│   ├── gemini_componenet.py# Gemini prompting AI
 ├── Images/                 # Miscellaneous Images
 ├── LICENSE                 # License to prevent people from commercializing our product
 ├── .gitignore              # Telling github to ignore your credentials from being uploaded

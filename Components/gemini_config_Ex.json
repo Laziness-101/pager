@@ -1,0 +1,13 @@
+// Rename this to gemini_config
+{
+    "api_key": "API Key Here",
+    "settings": {
+        "default_model": "gemini-1.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 2048
+    },
+    "logging": {
+        "enabled": true,
+        "log_file": "gemini_api_logs.txt"
+    }
+}

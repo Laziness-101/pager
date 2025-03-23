@@ -1,5 +1,6 @@
 # Twilio configuration file with credentials
 **/twilio_config.ignore
+**/gemini_config.json
 
 # Python cache files
 __pycache__/
