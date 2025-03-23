@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wake Word Detector (No SSE)</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="container mx-auto p-4">
+
+    <h1 class="text-2xl font-bold mb-4">Wake Word Detector (No SSE)</h1>
+
+    <!-- Settings Form -->
+    <form action="{{ url_for('update_settings') }}" method="POST" class="mb-6 bg-white p-4 rounded shadow">
+      <div class="mb-4">
+        <label for="phone_number" class="block font-semibold">Phone Number (placeholder):</label>
+        <input
+          type="text"
+          id="phone_number"
+          name="phone_number"
+          value="{{ phone_number }}"
+          class="border border-gray-300 rounded p-2 w-full"
+          placeholder="Enter phone number"
+        />
+      </div>
+      <div class="mb-4">
+        <label for="wake_words" class="block font-semibold">Wake Words (comma-separated):</label>
+        <textarea
+          id="wake_words"
+          name="wake_words"
+          rows="2"
+          class="border border-gray-300 rounded p-2 w-full"
+        >{{ wake_words }}</textarea>
+      </div>
+      <button
+        type="submit"
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+      >
+        Save
+      </button>
+    </form>
+
+    <!-- Detection Controls -->
+    <div class="flex space-x-4 mb-6">
+      <!-- Start -->
+      <form action="{{ url_for('start_detection') }}" method="POST">
+        <button
+          type="submit"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Start Detection
+        </button>
+      </form>
+      <!-- Stop -->
+      <form action="{{ url_for('stop_detection') }}" method="POST">
+        <button
+          type="submit"
+          class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Stop Detection
+        </button>
+      </form>
+    </div>
+
+    <!-- Log Section -->
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold mb-2">Logs:</h2>
+      <div id="logs" class="h-64 overflow-auto border border-gray-300 p-2 bg-gray-50"></div>
+    </div>
+  </div>
+
+  <!-- JS: Poll /logs endpoint every 2 seconds -->
+  <script>
+    const logsDiv = document.getElementById("logs");
+    let lastLogCount = 0;
+
+    // Periodic polling
+    setInterval(fetchLogs, 2000);
+
+    async function fetchLogs() {
+      try {
+        const resp = await fetch("/logs");
+        if (!resp.ok) {
+          console.error("Error fetching logs:", resp.status);
+          return;
+        }
+        const data = await resp.json();
+
+        // If new logs have been added, render them
+        if (data.length > lastLogCount) {
+          const newLogs = data.slice(lastLogCount); // only the new ones
+          newLogs.forEach(msg => appendLog(msg));
+          lastLogCount = data.length;
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    }
+
+    function appendLog(message) {
+      const p = document.createElement("p");
+      p.textContent = message;
+      logsDiv.appendChild(p);
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>
