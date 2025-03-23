@@ -22,10 +22,105 @@
 
   <!-- Main Container (flex-grow ensures background extends full height) -->
   <div class="container mx-auto px-4 pb-8 flex-grow">
-    <!-- Two-column layout for Settings (left) and Detection (right) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Three-column layout for API Config, Settings, and Detection -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-      <!-- Settings Card (Left) -->
+      <!-- API Configuration Card (Left) -->
+      <div class="card card-compact w-full bg-base-100 shadow">
+        <div class="card-body">
+          <h2 class="card-title text-lg">API Configuration</h2>
+          <p class="text-xs mb-2">
+            Configure your API keys for the services used by this app.
+          </p>
+          
+          <form 
+            action="{{ url_for('save_api_keys') }}" 
+            method="POST" 
+            class="mt-2"
+            onsubmit="disableSaveApiButton();"
+          >
+            <div class="form-control mb-2">
+              <label class="label label-text text-xs font-semibold" for="openai_api_key">
+                OpenAI API Key
+              </label>
+              <input
+                type="password"
+                id="openai_api_key"
+                name="openai_api_key"
+                value="{{ openai_api_key }}"
+                class="input input-bordered input-sm"
+                placeholder="sk-..."
+              />
+            </div>
+            
+            <div class="form-control mb-2">
+              <label class="label label-text text-xs font-semibold" for="twilio_sid">
+                Twilio SID
+              </label>
+              <input
+                type="password"
+                id="twilio_sid"
+                name="twilio_sid"
+                value="{{ twilio_sid }}"
+                class="input input-bordered input-sm"
+                placeholder="AC..."
+              />
+            </div>
+            
+            <div class="form-control mb-2">
+              <label class="label label-text text-xs font-semibold" for="twilio_token">
+                Twilio Token
+              </label>
+              <input
+                type="password"
+                id="twilio_token"
+                name="twilio_token"
+                value="{{ twilio_token }}"
+                class="input input-bordered input-sm"
+                placeholder="Enter Twilio Token"
+              />
+            </div>
+            
+            <div class="form-control mb-2">
+              <label class="label label-text text-xs font-semibold" for="twilio_phone">
+                Twilio Phone Number
+              </label>
+              <input
+                type="text"
+                id="twilio_phone"
+                name="twilio_phone"
+                value="{{ twilio_phone }}"
+                class="input input-bordered input-sm"
+                placeholder="+1..."
+              />
+            </div>
+            
+            <div class="form-control mb-3">
+              <label class="label label-text text-xs font-semibold" for="gemini_api_key">
+                Gemini API Key
+              </label>
+              <input
+                type="password"
+                id="gemini_api_key"
+                name="gemini_api_key"
+                value="{{ gemini_api_key }}"
+                class="input input-bordered input-sm"
+                placeholder="Enter Gemini API Key"
+              />
+            </div>
+
+            <button
+                id="save-api-btn"
+                type="submit"
+                class="btn btn-primary btn-sm"
+                >
+                Save API Keys
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Settings Card (Middle) -->
       <div class="card card-compact w-full bg-base-100 shadow">
         <div class="card-body">
           <h2 class="card-title text-lg">Setup Your Settings</h2>
@@ -172,6 +267,31 @@
     </div>
   </div>
 
+  <!-- API Keys Saved Alert -->
+  <div
+    id="api-keys-saved"
+    class="hidden alert alert-success alert-sm shadow-lg fixed bottom-5 right-5 w-64"
+  >
+    <div class="flex items-center">
+      <!-- check heroicon -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        class="w-4 h-4 mr-1"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <span class="text-m">API keys saved successfully!</span>
+    </div>
+  </div>
+
   <!-- Gemini Summary Modal Toggle -->
   <input type="checkbox" id="summary-modal" class="modal-toggle" />
   <div class="modal">
@@ -196,6 +316,7 @@
     const stopBtn = document.getElementById("stop-btn");
     const recordingIndicator = document.getElementById("recording-indicator");
     const callNotification = document.getElementById("call-notification");
+    const apiKeysSaved = document.getElementById("api-keys-saved");
 
     // Disable Stop by default (until Start is clicked)
     stopBtn.disabled = true;
@@ -255,6 +376,11 @@
         showCallPopup();
       }
 
+      // API Keys saved event
+      if (logMessage.includes("API keys saved to .env file")) {
+        showApiKeysSavedPopup();
+      }
+
       // Gemini summary event
       if (logMessage.includes("Gemini response:")) {
         const parts = logMessage.split("Gemini response:");
@@ -274,6 +400,15 @@
       }, 4000);
     }
 
+    // Show a small daisyUI alert for API keys saved
+    function showApiKeysSavedPopup() {
+      apiKeysSaved.classList.remove("hidden");
+      // Hide after ~4s
+      setTimeout(() => {
+        apiKeysSaved.classList.add("hidden");
+      }, 4000);
+    }
+
     // Show the Gemini summary in a modal
     function showSummary(summaryText) {
       document.getElementById("summary-content").textContent = summaryText;
@@ -285,6 +420,17 @@
     function disableSaveButton() {
       const btn = document.getElementById("save-btn");
       btn.disabled = true;
+    }
+
+    // Disable the "Save API Keys" button once clicked
+    function disableSaveApiButton() {
+      const btn = document.getElementById("save-api-btn");
+      btn.disabled = true;
+      
+      // Re-enable after a short delay (allows for multiple submissions if needed)
+      setTimeout(() => {
+        btn.disabled = false;
+      }, 2000);
     }
   </script>
 </body>

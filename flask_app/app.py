@@ -52,6 +52,15 @@ transcription = []
 stop_detection_flag = False
 detection_thread = None
 
+# API keys (will be loaded from .env if exists)
+api_keys = {
+    "openai_api_key": os.getenv("OPENAI_API_KEY", ""),
+    "twilio_sid": os.getenv("TWILIO_SID", ""),
+    "twilio_token": os.getenv("TWILIO_TOKEN", ""),
+    "twilio_phone": os.getenv("TWILIO_PHONE", ""),
+    "gemini_api_key": os.getenv("GEMINI_API_KEY", "")
+}
+
 ########################
 # HELPER FUNCTIONS
 ########################
@@ -98,6 +107,25 @@ def transcribe(file_path):
         )
     return transcript.text
 
+def save_env_file(api_keys_dict):
+    """
+    Save API keys to a .env file in the specified format
+    """
+    # Get the parent directory where app.py is located
+    app_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Create .env file with the specified format
+    env_path = os.path.join(app_dir, ".env")
+    
+    with open(env_path, "w") as f:
+        f.write(f"OPENAI_API_KEY={api_keys_dict['openai_api_key']}\n")
+        f.write(f"TWILIO_SID={api_keys_dict['twilio_sid']}\n")
+        f.write(f"TWILIO_TOKEN={api_keys_dict['twilio_token']}\n")
+        f.write(f"TWILIO_PHONE={api_keys_dict['twilio_phone']}\n")
+        f.write(f"GEMINI_API_KEY={api_keys_dict['gemini_api_key']}\n")
+    
+    return env_path
+
 ########################
 # DETECTION LOOP
 ########################
@@ -106,6 +134,7 @@ def detection_loop():
     Continuously record, transcribe, and check for wake words.
     Logs are written to the global list.
     """
+    global api_keys
     log_message("Detection started. Listening for wake words...")
 
     while not stop_detection_flag:
@@ -120,16 +149,16 @@ def detection_loop():
                 if word.lower() in text:
                     log_message(f"Wake word '{word}' detected!")
                     make_phone_call(
-                        sid=os.getenv("TWILIO_SID"),
-                        token=os.getenv("TWILIO_TOKEN"),
+                        sid=api_keys["twilio_sid"],
+                        token=api_keys["twilio_token"],
                         phone_number=phone_number,
-                        twilio_phone=os.getenv("TWILIO_PHONE"),
+                        twilio_phone=api_keys["twilio_phone"],
                     )
                     log_message(f"  -- Phone call sent to {phone_number} --")
                     transcription_string = ' '.join(transcription)
                     response = prompt_gemini(
                         prompt=f"The following is the transcript of a meeting going on. The main user has been called on in the meeting and requires an urgent summarization of everything discussed. Generate a summary of everything discussed in the meeting. Transcription: ```{transcription_string}```",
-                        api_key=os.getenv("GEMINI_API_KEY"),
+                        api_key=api_keys["gemini_api_key"],
                     )
                     log_message(f"  -- Gemini response: {response} --")
 
@@ -152,8 +181,38 @@ def index():
     return render_template(
         "index.html",
         phone_number=phone_number,
-        wake_words=", ".join(wake_words)
+        wake_words=", ".join(wake_words),
+        openai_api_key=api_keys["openai_api_key"],
+        twilio_sid=api_keys["twilio_sid"],
+        twilio_token=api_keys["twilio_token"],
+        twilio_phone=api_keys["twilio_phone"],
+        gemini_api_key=api_keys["gemini_api_key"]
     )
+
+@app.route("/save_api_keys", methods=["POST"])
+def save_api_keys():
+    """
+    Endpoint to save API keys to a .env file in the specified format,
+    then redirect back to home.
+    """
+    global api_keys
+    
+    # Update API keys from form data
+    api_keys["openai_api_key"] = request.form.get("openai_api_key", "")
+    api_keys["twilio_sid"] = request.form.get("twilio_sid", "")
+    api_keys["twilio_token"] = request.form.get("twilio_token", "")
+    api_keys["twilio_phone"] = request.form.get("twilio_phone", "")
+    api_keys["gemini_api_key"] = request.form.get("gemini_api_key", "")
+    
+    # Save to .env file
+    env_path = save_env_file(api_keys)
+    
+    # Update the client with the new API key
+    client = openai.OpenAI(api_key=api_keys["openai_api_key"])
+    
+    log_message(f"API keys saved to .env file at {env_path}")
+    
+    return redirect(url_for("index"))
 
 @app.route("/update_settings", methods=["POST"])
 def update_settings():
@@ -200,6 +259,15 @@ if __name__ == "__main__":
         device_info = p.get_device_info_by_index(DEVICE_INDEX)
         log_message(f"Using audio device: {device_info['name']} (index {DEVICE_INDEX})")
         
-        app.run(port=5000)
+        # Try to run on port 5000, but if unavailable, use 8080 instead
+        try:
+            log_message("Starting server on port 5000...")
+            app.run(port=5000)
+        except OSError as e:
+            if "Address already in use" in str(e):
+                log_message("Port 5000 is in use. Switching to port 8080...")
+                app.run(port=8080)
+            else:
+                raise
     finally:
         p.terminate()
