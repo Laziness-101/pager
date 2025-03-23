@@ -54,6 +54,10 @@ You can get your Twilio phone number by following these steps or by watching thi
 
 ![Twilio Dashboard Example](Images/AccountInfoTutorial.png)
 
+### Possible Bugs
+- Sometimes the app may crash after some uses, in these cases you may need to reset the cookies on 
+- Certain old softwares with old audio drivers may not be compatible with this software such as zoom, but google meetings, discord and MS teams have proved to be consistent
+
 ## Development Docs
 ### Functionality Chart
 
