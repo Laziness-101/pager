@@ -2,6 +2,7 @@
 **/twilio_config.ignore
 **/gemini_config.json
 **/.env
+**/temp.wav
 
 # Python cache files
 __pycache__/
