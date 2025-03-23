@@ -56,5 +56,8 @@ graph LR
 │   ├── call_component.py   # Number Calling Functionality
 │   ├── gui_component.py    # Python Gui Maker
 ├── Images/                 # Miscellaneous Images
+├── LICENSE                 # License to prevent people from commercializing our product
+├── .gitignore              # Telling github to ignore your credentials from being uploaded
+├── README.md               # This file for documentation
 └── ...
 ```
