@@ -4,7 +4,7 @@ import os
 
 # os.chdir("Components")
 
-def make_phone_call(message="Hello! This is an automated call from your Python script. Thank you for using Twilio!"):
+def make_phone_call(message="Hello! You have been called by the Laziness-101"):
     # Check if config file exists
     if not os.path.exists('Components/twilio_config.ignore'):
         print("Error: twilio_config.ignore file not found!")

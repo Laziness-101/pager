@@ -1,6 +1,6 @@
 import tkinter as tk
-import Components.make_call_component as caller
-from Components.twilio_gui_component import TwilioGUI
+import Components.call_component as caller
+from Components.gui_component import TwilioGUI
 
 def main():
     """
