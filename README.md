@@ -1,2 +1,2 @@
-# main
+# Documentation
 Where we build everything
