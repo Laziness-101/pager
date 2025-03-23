@@ -9,10 +9,32 @@ Make sure you have Twilio installed by running the command:
 ```
 pip install twilio
 ```
+```
+pip install openai
+```
+Install pyaudio
+```
+brew install portaudio
+pip install pyaudio
+```
+Install dotenv
+```
+pip install python-dotenv
+```
 Install google gemini api if you want gemini AI summarizer:
 ```
 pip install google.generativeai
 ```
+#### Getting Audio Recognition Setup
+
+1. For **Mac Users** install the Mac Blackhole Audio Driver at this [link] (https://github.com/ExistentialAudio/BlackHole) (Make sure to download the 2ch version)
+2. Open the app "Audio MIDI Setup"
+3. Create a new device by clicking the bottom left "+" sign
+4. Select "Macbook Pro Speakers" and "Blackhole 2ch"
+5. Make sure "Drift Connection" is enabled on Blackhole 2ch
+6. Now set your audio to the sound you want it to be enabled at
+7. Now go to Settings -> Sound Output -> Output
+8. Select the Multi-Output Device or whatever the audio connection was named on steps 4 - 5 (This should lock in your computer volume changing)
 
 #### Getting Your Twilio Phone Number
 You can get your Twilio phone number by following these steps or by watching this [YouTube Video](https://www.youtube.com/watch?v=Sqsz2T1Bzlg&t=29s).

@@ -27,7 +27,22 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
 RECORD_SECONDS = 5
-DEVICE_INDEX = 0  # BlackHole device index
+
+# Initialize PyAudio
+p = pyaudio.PyAudio()
+
+# Automatically find the BlackHole device index
+DEVICE_INDEX = None
+for i in range(p.get_device_count()):
+    info = p.get_device_info_by_index(i)
+    if "BlackHole 2ch" in info['name']:
+        DEVICE_INDEX = i
+        break
+
+# Fallback to default device if BlackHole not found
+if DEVICE_INDEX is None:
+    print("Warning: BlackHole 2ch device not found. Using default device.")
+    DEVICE_INDEX = 2  # Keeping original default as fallback
 
 # Shared data for wake words, phone number, logs, etc.
 wake_words = ["justin", "mohammad", "data lake 2.0"]  # default
@@ -36,9 +51,6 @@ log_messages = []  # We'll store log messages here instead of SSE queue
 transcription = []
 stop_detection_flag = False
 detection_thread = None
-
-# Initialize PyAudio
-p = pyaudio.PyAudio()
 
 ########################
 # HELPER FUNCTIONS
@@ -184,6 +196,10 @@ def get_logs():
 
 if __name__ == "__main__":
     try:
+        # Log which audio device we're using
+        device_info = p.get_device_info_by_index(DEVICE_INDEX)
+        log_message(f"Using audio device: {device_info['name']} (index {DEVICE_INDEX})")
+        
         app.run(port=5000)
     finally:
         p.terminate()
