@@ -2,16 +2,18 @@ from twilio.rest import Client
 import configparser
 import os
 
+# os.chdir("Components")
+
 def make_phone_call(message="Hello! This is an automated call from your Python script. Thank you for using Twilio!"):
     # Check if config file exists
-    if not os.path.exists('twilio_config.ignore'):
+    if not os.path.exists('Components/twilio_config.ignore'):
         print("Error: twilio_config.ignore file not found!")
         print("Please create this file with your Twilio credentials and phone numbers.")
         return False
     
     # Read configuration from .ignore file
     config = configparser.ConfigParser()
-    config.read('twilio_config.ignore')
+    config.read('Components/twilio_config.ignore')
     
     # Get credentials
     try:

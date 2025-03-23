@@ -3,6 +3,9 @@ from tkinter import messagebox
 import configparser
 import os
 
+# os.chdir("Components")
+current_dir = os.getcwd()
+
 class TwilioGUI:
     def __init__(self, root, make_call_function=None):
         """
@@ -91,9 +94,9 @@ class TwilioGUI:
     
     def load_config(self):
         """Load existing configuration if available"""
-        if os.path.exists('twilio_config.ignore'):
+        if os.path.exists('Components/twilio_config.ignore'):
             config = configparser.ConfigParser()
-            config.read('twilio_config.ignore')
+            config.read('Components/twilio_config.ignore')
             
             try:
                 # Set credentials
@@ -139,7 +142,7 @@ class TwilioGUI:
         
         # Write to file
         try:
-            with open('twilio_config.ignore', 'w') as configfile:
+            with open('Components/twilio_config.ignore', 'w') as configfile:
                 config.write(configfile)
             self.status_label.config(text="Credentials saved successfully!", fg="green")
             return True

@@ -1,5 +1,5 @@
 # Twilio configuration file with credentials
-twilio_config.ignore
+**/twilio_config.ignore
 
 # Python cache files
 __pycache__/
