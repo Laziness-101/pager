@@ -4,23 +4,28 @@ import os
 
 # os.chdir("Components")
 
-def make_phone_call(message="Hello! You have been called by the Laziness-101"):
+def make_phone_call(message="Hello! You have been called by the Laziness-101", sid=None, token=None, phone_number=None, twilio_phone=None):
     # Check if config file exists
-    if not os.path.exists('Components/twilio_config.ignore'):
-        print("Error: twilio_config.ignore file not found!")
-        print("Please create this file with your Twilio credentials and phone numbers.")
-        return False
+    # if not os.path.exists('Components/twilio_config.ignore'):
+    #     print("Error: twilio_config.ignore file not found!")
+    #     print("Please create this file with your Twilio credentials and phone numbers.")
+    #     return False
     
     # Read configuration from .ignore file
-    config = configparser.ConfigParser()
-    config.read('Components/twilio_config.ignore')
+    if not sid or not token or not phone_number or not twilio_phone:
+        config = configparser.ConfigParser()
+        config.read('Components/twilio_config.ignore')
     
     # Get credentials
     try:
-        account_sid = config['credentials']['account_sid']
-        auth_token = config['credentials']['auth_token']
-        my_phone = config['phone_numbers']['my_phone']
-        twilio_phone = config['phone_numbers']['twilio_phone']
+        # account_sid = sid if sid else config['credentials']['account_sid']
+        # auth_token = token if token else config['credentials']['auth_token']
+        # my_phone = phone_number if phone_number else config['phone_numbers']['my_phone']
+        # twilio_phone = twilio_phone if twilio_phone else config['phone_numbers']['twilio_phone']
+        account_sid = sid
+        auth_token = token
+        my_phone = phone_number
+        twilio_phone = twilio_phone
         
         # Check if credentials have been updated
         if account_sid == "your_account_sid_here" or auth_token == "your_auth_token_here":
