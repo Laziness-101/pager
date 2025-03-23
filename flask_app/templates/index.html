@@ -3,79 +3,204 @@
 <head>
   <meta charset="UTF-8" />
   <title>Wake Word Detector (No SSE)</title>
-  <!-- Tailwind CSS via CDN -->
+
+  <!-- DaisyUI & Tailwind CSS via CDN -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/daisyui@2.51.6/dist/full.css"
+  />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="container mx-auto p-4">
+<body class="bg-base-200 text-base-content min-h-screen flex flex-col">
 
-    <h1 class="text-2xl font-bold mb-4">Wake Word Detector (No SSE)</h1>
-
-    <!-- Settings Form -->
-    <form action="{{ url_for('update_settings') }}" method="POST" class="mb-6 bg-white p-4 rounded shadow">
-      <div class="mb-4">
-        <label for="phone_number" class="block font-semibold">Phone Number (placeholder):</label>
-        <input
-          type="text"
-          id="phone_number"
-          name="phone_number"
-          value="{{ phone_number }}"
-          class="border border-gray-300 rounded p-2 w-full"
-          placeholder="Enter phone number"
-        />
-      </div>
-      <div class="mb-4">
-        <label for="wake_words" class="block font-semibold">Wake Words (comma-separated):</label>
-        <textarea
-          id="wake_words"
-          name="wake_words"
-          rows="2"
-          class="border border-gray-300 rounded p-2 w-full"
-        >{{ wake_words }}</textarea>
-      </div>
-      <button
-        type="submit"
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-      >
-        Save
-      </button>
-    </form>
-
-    <!-- Detection Controls -->
-    <div class="flex space-x-4 mb-6">
-      <!-- Start -->
-      <form action="{{ url_for('start_detection') }}" method="POST">
-        <button
-          type="submit"
-          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Start Detection
-        </button>
-      </form>
-      <!-- Stop -->
-      <form action="{{ url_for('stop_detection') }}" method="POST">
-        <button
-          type="submit"
-          class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Stop Detection
-        </button>
-      </form>
-    </div>
-
-    <!-- Log Section -->
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold mb-2">Logs:</h2>
-      <div id="logs" class="h-64 overflow-auto border border-gray-300 p-2 bg-gray-50"></div>
+  <!-- Top Nav -->
+  <div class="navbar bg-base-100 shadow-sm mb-4">
+    <div class="flex-1 px-2">
+      <span class="text-2xl font-bold">Wake Word Detector</span>
     </div>
   </div>
 
-  <!-- JS: Poll /logs endpoint every 2 seconds -->
+  <!-- Main Container (flex-grow ensures background extends full height) -->
+  <div class="container mx-auto px-4 pb-8 flex-grow">
+    <!-- Two-column layout for Settings (left) and Detection (right) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- Settings Card (Left) -->
+      <div class="card card-compact w-full bg-base-100 shadow">
+        <div class="card-body">
+          <h2 class="card-title text-lg">Setup Your Settings</h2>
+          
+          <!-- Disable the save button once clicked -->
+          <form 
+            action="{{ url_for('update_settings') }}" 
+            method="POST" 
+            class="mt-2"
+            onsubmit="disableSaveButton();"
+          >
+            <div class="form-control mb-2">
+              <label class="label label-text text-xs font-semibold" for="phone_number">
+                Phone Number to Call
+              </label>
+              <input
+                type="text"
+                id="phone_number"
+                name="phone_number"
+                value="{{ phone_number }}"
+                class="input input-bordered input-sm"
+                placeholder="Enter phone number"
+                {% if phone_number and wake_words %}disabled{% endif %}
+              />
+            </div>
+            
+            <div class="form-control mb-3">
+              <label class="label label-text text-xs font-semibold" for="wake_words">
+                Wake Words (comma-separated)
+              </label>
+              <textarea
+                id="wake_words"
+                name="wake_words"
+                rows="2"
+                class="textarea textarea-bordered textarea-sm"
+                {% if phone_number and wake_words %}disabled{% endif %}
+              >{{ wake_words }}</textarea>
+            </div>
+
+            <button
+                id="save-btn"
+                type="submit"
+                class="btn btn-primary btn-sm"
+                {% if phone_number and wake_words %}disabled{% endif %}
+                >
+                Save
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Detection Controls Card (Right) -->
+      <div
+        class="card card-compact w-full bg-base-100 shadow"
+        {% if not (phone_number and wake_words) %}style="opacity:0.5; pointer-events:none;"{% endif %}
+      >
+        <div class="card-body">
+          <h2 class="card-title text-lg">Detection Controls</h2>
+          <p class="text-xs">
+            Start or stop voice detection.
+          </p>
+
+          <!-- Right-aligned buttons -->
+          <div class="flex justify-end space-x-2 mt-2">
+            <!-- Start -->
+            <form action="{{ url_for('start_detection') }}" method="POST">
+              <button
+                id="start-btn"
+                type="submit"
+                class="btn btn-success btn-sm flex items-center space-x-1"
+                {% if not (phone_number and wake_words) %}disabled{% endif %}
+              >
+                <!-- Play icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M5 3l14 9-14 9V3z" />
+                </svg>
+                <span>Start</span>
+              </button>
+            </form>
+
+            <!-- Stop -->
+            <form action="{{ url_for('stop_detection') }}" method="POST">
+              <button
+                id="stop-btn"
+                type="submit"
+                class="btn btn-error btn-sm flex items-center space-x-1"
+                disabled
+              >
+                <!-- Pause icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M6 4h4v16H6zM14 4h4v16h-4z"/>
+                </svg>
+                <span>Pause</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Recording Indicator -->
+          <div id="recording-indicator" class="hidden mt-3 flex items-center space-x-2">
+            <!-- Pulsing red circle animation -->
+            <div class="relative flex h-4 w-4">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+            </div>
+            <span class="text-xs">Recording...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert for Call Notification -->
+  <div
+    id="call-notification"
+    class="hidden alert alert-success alert-sm shadow-lg fixed bottom-5 right-5 w-64"
+  >
+    <div class="flex items-center">
+      <!-- phone heroicon -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        class="w-4 h-4 mr-1"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15.75 2.25l3 3m0 0l-3 3m3-3H9m-3.75 3h2.25a.75.75 0 01.75.75v12.75a.75.75 0 01-.75.75H5.25a2.25 2.25 0 01-2.25-2.25V8.25A2.25 2.25 0 015.25 6h2.25z"
+        />
+      </svg>
+      <span class="text-m">Wake word detected! A call was initiated.</span>
+    </div>
+  </div>
+
+  <!-- Gemini Summary Modal Toggle -->
+  <input type="checkbox" id="summary-modal" class="modal-toggle" />
+  <div class="modal">
+    <div class="modal-box relative card-compact">
+      <label for="summary-modal" class="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
+      <h3 class="text-sm font-bold flex items-center gap-4">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="yellow" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+          </svg>
+          
+        Meeting Summary
+      </h3>
+      <p id="summary-content" class="text-xs mt-2"></p>
+    </div>
+  </div>
+
+  <!-- JS -->
   <script>
-    const logsDiv = document.getElementById("logs");
     let lastLogCount = 0;
 
-    // Periodic polling
+    const startBtn = document.getElementById("start-btn");
+    const stopBtn = document.getElementById("stop-btn");
+    const recordingIndicator = document.getElementById("recording-indicator");
+    const callNotification = document.getElementById("call-notification");
+
+    // Disable Stop by default (until Start is clicked)
+    stopBtn.disabled = true;
+
+    // Poll the /logs endpoint every 2 seconds
     setInterval(fetchLogs, 2000);
 
     async function fetchLogs() {
@@ -87,10 +212,10 @@
         }
         const data = await resp.json();
 
-        // If new logs have been added, render them
+        // If new logs, handle them
         if (data.length > lastLogCount) {
-          const newLogs = data.slice(lastLogCount); // only the new ones
-          newLogs.forEach(msg => appendLog(msg));
+          const newLogs = data.slice(lastLogCount);
+          newLogs.forEach(logMsg => handleLog(logMsg));
           lastLogCount = data.length;
         }
       } catch (err) {
@@ -98,11 +223,68 @@
       }
     }
 
-    function appendLog(message) {
-      const p = document.createElement("p");
-      p.textContent = message;
-      logsDiv.appendChild(p);
-      logsDiv.scrollTop = logsDiv.scrollHeight;
+    function handleLog(logMessage) {
+      // Detection started
+      if (
+        logMessage.includes("Detection thread started") ||
+        logMessage.includes("Detection started. Listening")
+      ) {
+        // Show recording indicator
+        recordingIndicator.classList.remove("hidden");
+        // Disable "Start Detection"
+        startBtn.disabled = true;
+        // Enable "Stop Detection"
+        stopBtn.disabled = false;
+      }
+
+      // Detection stopped
+      if (
+        logMessage.includes("Detection stopped.") ||
+        logMessage.includes("Stopping detection thread...")
+      ) {
+        // Hide recording indicator
+        recordingIndicator.classList.add("hidden");
+        // Re-enable "Start Detection"
+        startBtn.disabled = false;
+        // Disable "Stop Detection"
+        stopBtn.disabled = true;
+      }
+
+      // Phone call event
+      if (logMessage.includes("Phone call sent to")) {
+        showCallPopup();
+      }
+
+      // Gemini summary event
+      if (logMessage.includes("Gemini response:")) {
+        const parts = logMessage.split("Gemini response:");
+        if (parts.length > 1) {
+          const summaryText = parts[1].trim();
+          showSummary(summaryText);
+        }
+      }
+    }
+
+    // Show a small daisyUI alert for phone call
+    function showCallPopup() {
+      callNotification.classList.remove("hidden");
+      // Hide after ~4s
+      setTimeout(() => {
+        callNotification.classList.add("hidden");
+      }, 4000);
+    }
+
+    // Show the Gemini summary in a modal
+    function showSummary(summaryText) {
+      document.getElementById("summary-content").textContent = summaryText;
+      // Check the checkbox to open the modal
+      document.getElementById("summary-modal").checked = true;
+    }
+
+    // Disable the "Save" button once clicked
+    function disableSaveButton() {
+      const btn = document.getElementById("save-btn");
+      btn.disabled = true;
     }
   </script>
 </body>

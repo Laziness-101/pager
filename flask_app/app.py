@@ -30,7 +30,7 @@ RECORD_SECONDS = 5
 DEVICE_INDEX = 0  # BlackHole device index
 
 # Shared data for wake words, phone number, logs, etc.
-wake_words = ["drake", "pedophile", "like"]  # default
+wake_words = ["justin", "mohammad", "data lake 2.0"]  # default
 phone_number = ""
 log_messages = []  # We'll store log messages here instead of SSE queue
 transcription = []
