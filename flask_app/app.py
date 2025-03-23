@@ -1,4 +1,12 @@
+import sys
 import os
+from dotenv import load_dotenv
+
+# Add the parent directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+load_dotenv()
+
 import openai
 import pyaudio
 import wave
@@ -6,11 +14,13 @@ import time
 import threading
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 
+from Components.call_component import make_phone_call
+from Components.gemini_component import prompt_gemini
+
 ########################
 # CONFIG
 ########################
-OPENAI_API_KEY = "API_KEY"
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -20,9 +30,10 @@ RECORD_SECONDS = 5
 DEVICE_INDEX = 0  # BlackHole device index
 
 # Shared data for wake words, phone number, logs, etc.
-wake_words = ["drake", "pedophile", "like"]  # default
+wake_words = ["justin", "mohammad", "data lake 2.0"]  # default
 phone_number = ""
 log_messages = []  # We'll store log messages here instead of SSE queue
+transcription = []
 stop_detection_flag = False
 detection_thread = None
 
@@ -89,12 +100,26 @@ def detection_loop():
         try:
             audio_path = record_audio()
             text = transcribe(audio_path).lower().strip()
+            transcription.append(text)
             log_message(f"Transcription: {text}")
 
             # Check each wake word
             for word in wake_words:
                 if word.lower() in text:
                     log_message(f"Wake word '{word}' detected!")
+                    make_phone_call(
+                        sid=os.getenv("TWILIO_SID"),
+                        token=os.getenv("TWILIO_TOKEN"),
+                        phone_number=phone_number,
+                        twilio_phone=os.getenv("TWILIO_PHONE"),
+                    )
+                    log_message(f"  -- Phone call sent to {phone_number} --")
+                    transcription_string = ' '.join(transcription)
+                    response = prompt_gemini(
+                        prompt=f"The following is the transcript of a meeting going on. The main user has been called on in the meeting and requires an urgent summarization of everything discussed. Generate a summary of everything discussed in the meeting. Transcription: ```{transcription_string}```",
+                        api_key=os.getenv("GEMINI_API_KEY"),
+                    )
+                    log_message(f"  -- Gemini response: {response} --")
 
         except Exception as e:
             log_message(f"Error: {e}")
