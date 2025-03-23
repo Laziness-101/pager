@@ -26,7 +26,7 @@ You can get your Twilio phone number by following these steps or by watching thi
    - My Twilio Phone Number
 9. Copy and paste these credentials into the website
 
-![Twilio Dashboard Example](AccountInfoTutorial.png)
+![Twilio Dashboard Example](Images/AccountInfoTutorial.png)
 
 ## Development Docs
 ### Functionality Chart
